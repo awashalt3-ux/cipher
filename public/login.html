@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connexion — Cipher Mail</title>
+<meta name="description" content="Connectez-vous à votre compte Cipher Mail pour accéder à toutes vos boîtes temporaires.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/css/base.css">
+<link rel="stylesheet" href="/assets/css/auth.css">
+</head>
+<body>
+
+<div class="auth-wrap">
+  <aside class="auth-aside">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="-0.5 -0.5 25 25" fill="currentColor" aria-hidden="true"><path d="m16.484 11.976 6.151-5.344v10.627zm-7.926.905 2.16 1.875c.339.288.781.462 1.264.462h.017-.001.014c.484 0 .926-.175 1.269-.465l-.003.002 2.16-1.875 6.566 5.639h-20.009zm-6.572-7.516h20.03l-9.621 8.356c-.104.082-.236.132-.38.132-.005 0-.009 0-.014 0h.001c-.004 0-.009 0-.014 0-.144 0-.277-.05-.381-.133l.001.001zm-.621 1.266 6.15 5.344-6.15 5.28zm21.6-2.441c-.24-.12-.522-.19-.821-.19h-20.285c-.3.001-.584.071-.835.197l.011-.005c-.618.309-1.035.937-1.035 1.663v.004 12.168c.001 1.026.833 1.857 1.858 1.858h20.283c1.026-.001 1.857-.833 1.858-1.858v-12.168c0-.001 0-.002 0-.004 0-.727-.419-1.357-1.029-1.66l-.011-.005z"/></svg>
+      </span>
+      <span>Cipher Mail</span>
+    </a>
+
+    <div class="aside-body">
+      <span class="auth-kicker">Espace personnel</span>
+      <h2>Vos boîtes temporaires<br><em>vous attendent.</em></h2>
+      <p class="lede">
+        Retrouvez l'intégralité de vos adresses, messages archivés et codes de vérification,
+        exactement là où vous les avez laissés.
+      </p>
+
+      <div class="auth-points">
+        <div class="auth-point">
+          <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg></span>
+          <span><strong>Rien n'est perdu</strong>Les messages restent lisibles même après des mois.</span>
+        </div>
+        <div class="auth-point">
+          <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg></span>
+          <span><strong>Relève continue</strong>Les nouvelles boîtes sont synchronisées en arrière-plan.</span>
+        </div>
+        <div class="auth-point">
+          <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg></span>
+          <span><strong>Double authentification</strong>Protection TOTP et codes de secours disponibles.</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="aside-foot">
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10" rx="2.4"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></svg>
+        Sessions chiffrées · CSRF protégé
+      </span>
+      <span style="margin-left:auto">Données hébergées localement</span>
+    </p>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <a class="brand mobile-brand" href="/">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="-0.5 -0.5 25 25" fill="currentColor" aria-hidden="true"><path d="m16.484 11.976 6.151-5.344v10.627zm-7.926.905 2.16 1.875c.339.288.781.462 1.264.462h.017-.001.014c.484 0 .926-.175 1.269-.465l-.003.002 2.16-1.875 6.566 5.639h-20.009zm-6.572-7.516h20.03l-9.621 8.356c-.104.082-.236.132-.38.132-.005 0-.009 0-.014 0h.001c-.004 0-.009 0-.014 0-.144 0-.277-.05-.381-.133l.001.001zm-.621 1.266 6.15 5.344-6.15 5.28zm21.6-2.441c-.24-.12-.522-.19-.821-.19h-20.285c-.3.001-.584.071-.835.197l.011-.005c-.618.309-1.035.937-1.035 1.663v.004 12.168c.001 1.026.833 1.857 1.858 1.858h20.283c1.026-.001 1.857-.833 1.858-1.858v-12.168c0-.001 0-.002 0-.004 0-.727-.419-1.357-1.029-1.66l-.011-.005z"/></svg>
+        </span>
+        <span>Cipher Mail</span>
+      </a>
+
+      <h1 id="title">Connexion</h1>
+      <p class="sub" id="subtitle">Accédez à votre collection de boîtes temporaires.</p>
+
+      <div class="alert alert-error" id="errorBox" hidden role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        <span id="errorText"></span>
+      </div>
+      <div class="alert alert-info" id="infoBox" hidden role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
+        <span id="infoText"></span>
+      </div>
+
+      <form class="auth-form" id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">Adresse email</label>
+          <input class="input" type="email" id="email" name="email" autocomplete="username" placeholder="vous@exemple.com" required>
+        </div>
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <div class="pw-wrap">
+            <input class="input" type="password" id="password" name="password" autocomplete="current-password" placeholder="Votre mot de passe" required>
+            <button class="pw-toggle" type="button" id="pwToggle" aria-label="Afficher le mot de passe"></button>
+          </div>
+        </div>
+
+        <div id="totpSection" hidden>
+          <div class="field">
+            <label for="totp">Code de vérification</label>
+            <input class="input" type="text" id="totp" name="totp" inputmode="numeric" autocomplete="one-time-code" placeholder="123456 ou code de secours" maxlength="12">
+            <p class="hint">Code à 6 chiffres de votre application d'authentification, ou un code de secours.</p>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" type="submit" id="submitBtn">Se connecter</button>
+      </form>
+
+      <div class="alert alert-warn" id="verifyBox" hidden style="margin-top:18px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        <span>Votre adresse n'est pas encore confirmée. <a href="#" id="resendLink">Renvoyer l'email de confirmation</a>.</span>
+      </div>
+
+      <p class="auth-alt">Pas encore de compte ? <a href="/register">Créer un compte</a></p>
+      <p class="auth-legal">Vos sessions sont conservées de façon sécurisée afin de maintenir l'accès à vos boîtes entre deux visites.</p>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { api, setCsrf, initTheme, toast, ICONS } from "/assets/js/common.js";
+
+initTheme();
+
+const form = document.getElementById("loginForm");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const totpSection = document.getElementById("totpSection");
+const totpInput = document.getElementById("totp");
+const submitBtn = document.getElementById("submitBtn");
+const errorBox = document.getElementById("errorBox");
+const errorText = document.getElementById("errorText");
+const infoBox = document.getElementById("infoBox");
+const infoText = document.getElementById("infoText");
+const verifyBox = document.getElementById("verifyBox");
+const title = document.getElementById("title");
+const subtitle = document.getElementById("subtitle");
+
+const pwToggle = document.getElementById("pwToggle");
+pwToggle.innerHTML = ICONS.eye;
+pwToggle.addEventListener("click", () => {
+  const show = passwordInput.type === "password";
+  passwordInput.type = show ? "text" : "password";
+  pwToggle.innerHTML = show ? ICONS.eyeOff : ICONS.eye;
+  pwToggle.setAttribute("aria-label", show ? "Masquer le mot de passe" : "Afficher le mot de passe");
+});
+
+function showError(message) {
+  errorText.textContent = message;
+  errorBox.hidden = false;
+}
+function clearMessages() {
+  errorBox.hidden = true;
+  infoBox.hidden = true;
+  verifyBox.hidden = true;
+}
+
+const pending = sessionStorage.getItem("cipher-pending-email");
+if (pending) {
+  emailInput.value = pending;
+  passwordInput.focus();
+}
+const flash = sessionStorage.getItem("cipher-flash");
+if (flash) {
+  infoText.textContent = flash;
+  infoBox.hidden = false;
+  sessionStorage.removeItem("cipher-flash");
+}
+if (new URLSearchParams(location.search).get("expired") === "1") {
+  infoText.textContent = "Votre session a expiré. Reconnectez-vous pour continuer.";
+  infoBox.hidden = false;
+}
+
+let totpMode = false;
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearMessages();
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  if (!email) return showError("Saisissez votre adresse email.");
+  if (!password) return showError("Saisissez votre mot de passe.");
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span> Connexion…';
+
+  try {
+    const payload = { email, password };
+    if (totpMode && totpInput.value.trim()) payload.totp = totpInput.value.trim();
+
+    const data = await api("/api/auth/login", { method: "POST", body: payload });
+    setCsrf(data.csrf);
+    sessionStorage.removeItem("cipher-pending-email");
+    location.href = "/app";
+  } catch (error) {
+    const code = error.data?.code;
+    if (code === "totp_required") {
+      totpMode = true;
+      totpSection.hidden = false;
+      title.textContent = "Vérification en deux étapes";
+      subtitle.textContent = "Saisissez le code généré par votre application d'authentification.";
+      totpInput.focus();
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Vérifier et se connecter";
+      return;
+    }
+    if (code === "totp_invalid") {
+      showError("Code à deux facteurs invalide. Réessayez.");
+      totpInput.select();
+    } else if (code === "unverified") {
+      verifyBox.hidden = false;
+      showError(error.message);
+    } else {
+      showError(error.message);
+    }
+  } finally {
+    submitBtn.disabled = false;
+    if (!totpMode) submitBtn.textContent = "Se connecter";
+  }
+});
+
+document.getElementById("resendLink").addEventListener("click", async (event) => {
+  event.preventDefault();
+  const email = emailInput.value.trim();
+  if (!email) return showError("Saisissez d'abord votre adresse email.");
+  try {
+    await api("/api/auth/resend", { method: "POST", body: { email } });
+    toast("Si un compte existe, un email vient d'être envoyé.", "success");
+  } catch (error) {
+    toast(error.message, "error");
+  }
+});
+
+totpInput.addEventListener("input", () => {
+  totpInput.value = totpInput.value.replace(/[^0-9a-zA-Z-]/g, "").slice(0, 12);
+});
+</script>
+</body>
+</html>

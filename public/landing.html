@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cipher Mail — Toutes vos boîtes temporaires, au même endroit</title>
+<meta name="description" content="Créez des adresses email temporaires en un clic, conservez-les indéfiniment et retrouvez tous leurs messages dans une boîte de réception moderne. Compte sécurisé, confirmation email et double authentification.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/css/base.css">
+<link rel="stylesheet" href="/assets/css/public.css">
+</head>
+<body>
+
+<header class="pub-header">
+  <div class="shell">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="-0.5 -0.5 25 25" fill="currentColor" aria-hidden="true"><path d="m16.484 11.976 6.151-5.344v10.627zm-7.926.905 2.16 1.875c.339.288.781.462 1.264.462h.017-.001.014c.484 0 .926-.175 1.269-.465l-.003.002 2.16-1.875 6.566 5.639h-20.009zm-6.572-7.516h20.03l-9.621 8.356c-.104.082-.236.132-.38.132-.005 0-.009 0-.014 0h.001c-.004 0-.009 0-.014 0-.144 0-.277-.05-.381-.133l.001.001zm-.621 1.266 6.15 5.344-6.15 5.28zm21.6-2.441c-.24-.12-.522-.19-.821-.19h-20.285c-.3.001-.584.071-.835.197l.011-.005c-.618.309-1.035.937-1.035 1.663v.004 12.168c.001 1.026.833 1.857 1.858 1.858h20.283c1.026-.001 1.857-.833 1.858-1.858v-12.168c0-.001 0-.002 0-.004 0-.727-.419-1.357-1.029-1.66l-.011-.005z"/></svg>
+      </span>
+      <span>Cipher Mail</span>
+    </a>
+    <nav class="pub-nav" aria-label="Navigation principale">
+      <a href="#fonctionnalites">Fonctionnalités</a>
+      <a href="#fonctionnement">Comment ça marche</a>
+      <a href="#securite">Sécurité</a>
+    </nav>
+    <div class="pub-actions">
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Changer de thème"></button>
+      <a class="btn btn-ghost btn-sm" href="/login">Connexion</a>
+      <a class="btn btn-primary btn-sm" href="/register">Créer un compte</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="shell">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Boîtes eztempmail archivées à vie</span>
+      <h1>Créez une temp mail,<br><span class="grad">ne la perdez plus jamais.</span></h1>
+      <p class="lede">
+        Chaque adresse temporaire est stockée avec sa session complète : les messages restent accessibles
+        même après la fermeture du navigateur. Toutes vos boîtes dans une interface unique, moderne et sécurisée.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="/register">Commencer gratuitement</a>
+        <a class="btn btn-outline btn-lg" href="/login">J'ai déjà un compte</a>
+      </div>
+      <p class="hero-note">Confirmation par email · Double authentification · Aucune limite de durée de conservation</p>
+
+      <div class="preview" aria-hidden="true">
+        <div class="preview-bar">
+          <i></i><i></i><i></i>
+          <span class="preview-url">cipher.local / boîte de réception</span>
+        </div>
+        <div class="preview-grid">
+          <div class="preview-side">
+            <div class="ps-item on"><span class="av">N</span> netflix.vip@goofyfox.com</div>
+            <div class="ps-item"><span class="av">D</span> discord@rapidmailai.com</div>
+            <div class="ps-item"><span class="av">S</span> steam@wifiifairy.com</div>
+            <div class="ps-item"><span class="av">T</span> twitch@spamuraai.com</div>
+            <div class="ps-item"><span class="av">+</span> Nouvelle boîte…</div>
+          </div>
+          <div class="preview-main">
+            <div class="preview-list">
+              <div class="preview-row on">
+                <span class="av" style="background:linear-gradient(135deg,#e8710a,#f59b3c)">NF</span>
+                <span class="pr-lines">
+                  <span class="l1" style="display:block">Netflix</span>
+                  <span class="l2" style="display:block">Votre code de connexion</span>
+                </span>
+              </div>
+              <div class="preview-row">
+                <span class="av" style="background:var(--ink-soft)">DC</span>
+                <span class="pr-lines">
+                  <span class="l1" style="display:block">Discord</span>
+                  <span class="l2" style="display:block">Vérifiez votre adresse email</span>
+                </span>
+              </div>
+              <div class="preview-row">
+                <span class="av" style="background:linear-gradient(135deg,#12b5a5,#3ed0c1)">ST</span>
+                <span class="pr-lines">
+                  <span class="l1" style="display:block">Steam Support</span>
+                  <span class="l2" style="display:block">Nouvelle connexion détectée</span>
+                </span>
+              </div>
+            </div>
+            <div class="preview-read">
+              <div class="pr-subject">Votre code de connexion Netflix</div>
+              <div class="pr-from">
+                <span class="av">NF</span>
+                <span>
+                  <span class="n" style="display:block">Netflix</span>
+                  <span class="m" style="display:block">info@account.netflix.com</span>
+                </span>
+              </div>
+              <div class="preview-bubble">
+                <div class="lab">Code détecté</div>
+                <div class="val">482 913</div>
+              </div>
+              <div class="preview-lines"><span></span><span></span><span></span><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="fonctionnalites">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Tout ce qu'il faut pour ne plus rien perdre</h2>
+        <p>Les sites de temp mail oublient vos boîtes dès que vous fermez l'onglet. Ici, tout est conservé et organisé.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature">
+          <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></div>
+          <h3>Collection illimitée</h3>
+          <p>Créez autant de boîtes que nécessaire et retrouvez-les toutes dans une seule liste, classées et cherchables.</p>
+        </article>
+        <article class="feature">
+          <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+          <h3>Conservation permanente</h3>
+          <p>La session de chaque boîte est chiffrée et conservée côté serveur : vos messages survivent aux redémarrages.</p>
+        </article>
+        <article class="feature">
+          <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z"/></svg></div>
+          <h3>Relève automatique</h3>
+          <p>Un moteur interroge vos boîtes en continu et archive les nouveaux messages dès leur arrivée.</p>
+        </article>
+        <article class="feature">
+          <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.4"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></div>
+          <h3>Codes détectés</h3>
+          <p>Les codes de vérification sont extraits automatiquement et copiables en un clic, directement dans la liste.</p>
+        </article>
+        <article class="feature">
+          <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10" rx="2.4"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></svg></div>
+          <h3>Compte protégé</h3>
+          <p>Mot de passe haché avec scrypt, confirmation d'adresse par email et double authentification TOTP facultative.</p>
+        </article>
+        <article class="feature">
+          <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 19h16"/></svg></div>
+          <h3>Export &amp; sauvegarde</h3>
+          <p>Exportez l'intégralité d'une boîte au format XML lisible pour archiver vos échanges hors de l'application.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="fonctionnement" style="background:var(--surface-2);border-block:1px solid var(--border)">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Trois étapes, zéro friction</h2>
+        <p>L'adresse est générée chez eztempmail, puis archivée et synchronisée par Cipher Mail.</p>
+      </div>
+      <div class="steps">
+        <article class="step">
+          <h3>Créez votre compte</h3>
+          <p>Inscription en quelques secondes, confirmée par email. Activez ensuite la double authentification si vous le souhaitez.</p>
+        </article>
+        <article class="step">
+          <h3>Générez une boîte</h3>
+          <p>Choisissez un nom et un domaine, ou laissez l'adresse aléatoire. Elle est immédiatement ajoutée à votre collection.</p>
+        </article>
+        <article class="step">
+          <h3>Lisez et conservez</h3>
+          <p>Les messages arrivent automatiquement, restent lisibles à vie et chaque code est mis en avant pour un copier-coller instantané.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="securite">
+    <div class="shell">
+      <div class="section-head">
+        <h2>La sécurité n'est pas une option</h2>
+        <p>Vos boîtes contiennent des codes de vérification sensibles. Le compte qui les protège doit être irréprochable.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature">
+          <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10" rx="2.4"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></svg></div>
+          <h3>Confirmation d'adresse</h3>
+          <p>Un lien à durée limitée valide votre email. Les comptes non confirmés ne peuvent pas accéder aux boîtes.</p>
+        </article>
+        <article class="feature">
+          <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4.3 3 8.2 7 9 4-.8 7-4.7 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <h3>Double authentification</h3>
+          <p>TOTP compatible avec toutes les applications d'authentification, plus huit codes de secours à usage unique.</p>
+        </article>
+        <article class="feature">
+          <div class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8m-3 0h3v3"/></svg></div>
+          <h3>Sessions maîtrisées</h3>
+          <p>Historique des connexions, révocation à distance et déconnexion automatique des anciennes sessions.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="shell">
+      <div class="cta-band">
+        <h2>Prêt à ne plus jamais perdre une temp mail ?</h2>
+        <p>Créez votre compte et rassemblez toutes vos boîtes temporaires dans une interface qui vous ressemble.</p>
+        <div class="hero-cta">
+          <a class="btn btn-lg" href="/register">Créer mon compte</a>
+          <a class="btn btn-outline btn-lg" href="/login">Se connecter</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="pub-foot">
+  <div class="shell">
+    <span>Cipher Mail — gestionnaire de boîtes temporaires</span>
+    <span class="links">
+      <a href="#fonctionnalites">Fonctionnalités</a>
+      <a href="#securite">Sécurité</a>
+      <a href="/login">Connexion</a>
+      <a href="/register">Inscription</a>
+    </span>
+  </div>
+</footer>
+
+<script type="module">
+import { initTheme, toggleTheme } from "/assets/js/common.js";
+
+initTheme();
+const themeBtn = document.getElementById("themeBtn");
+const paint = () => {
+  themeBtn.innerHTML = document.documentElement.dataset.theme === "dark"
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+};
+paint();
+themeBtn.addEventListener("click", () => { toggleTheme(); paint(); });
+
+// Apparition douce des sections
+const observer = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (entry.isIntersecting) {
+      entry.target.style.animation = "modal-in .5s cubic-bezier(.2,.9,.3,1) both";
+      observer.unobserve(entry.target);
+    }
+  }
+}, { threshold: 0.12 });
+document.querySelectorAll(".feature, .step").forEach((element, index) => {
+  element.style.animationDelay = `${index * 40}ms`;
+  observer.observe(element);
+});
+</script>
+</body>
+</html>

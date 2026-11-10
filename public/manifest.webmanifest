@@ -1,0 +1,23 @@
+{
+  "name": "Cipher Mail",
+  "short_name": "Cipher",
+  "description": "Toutes vos boîtes temp mail conservées dans une interface moderne.",
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#0b0f17",
+  "theme_color": "#0b0f17",
+  "icons": [
+    {
+      "src": "/assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

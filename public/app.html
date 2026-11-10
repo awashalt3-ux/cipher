@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cipher Mail</title>
+<meta name="theme-color" content="#1a73e8">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/css/base.css">
+<link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ barre supérieure ============ -->
+  <header class="topbar">
+    <button class="icon-btn sidebar-toggle" id="sidebarToggle" aria-label="Afficher les boîtes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+
+    <a class="brand" href="/app">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="-0.5 -0.5 25 25" fill="currentColor" aria-hidden="true"><path d="m16.484 11.976 6.151-5.344v10.627zm-7.926.905 2.16 1.875c.339.288.781.462 1.264.462h.017-.001.014c.484 0 .926-.175 1.269-.465l-.003.002 2.16-1.875 6.566 5.639h-20.009zm-6.572-7.516h20.03l-9.621 8.356c-.104.082-.236.132-.38.132-.005 0-.009 0-.014 0h.001c-.004 0-.009 0-.014 0-.144 0-.277-.05-.381-.133l.001.001zm-.621 1.266 6.15 5.344-6.15 5.28zm21.6-2.441c-.24-.12-.522-.19-.821-.19h-20.285c-.3.001-.584.071-.835.197l.011-.005c-.618.309-1.035.937-1.035 1.663v.004 12.168c.001 1.026.833 1.857 1.858 1.858h20.283c1.026-.001 1.857-.833 1.858-1.858v-12.168c0-.001 0-.002 0-.004 0-.727-.419-1.357-1.029-1.66l-.011-.005z"/></svg>
+      </span>
+      <span>Cipher Mail</span>
+    </a>
+
+    <div class="searchbar" role="search">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+      <input type="search" id="searchInput" placeholder="Rechercher un expéditeur, un objet, un code…" autocomplete="off" aria-label="Rechercher dans les messages">
+      <button class="search-clear" id="searchClear" aria-label="Effacer la recherche">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="topbar-actions">
+      <span class="poll-indicator" id="pollIndicator" title="Relève automatique">
+        <span class="dot"></span><span id="pollLabel">En direct</span>
+      </span>
+      <button class="icon-btn" id="refreshBtn" aria-label="Actualiser toutes les boîtes" title="Actualiser (R)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+      </button>
+      <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Thème"></button>
+      <div style="position:relative">
+        <button class="user-chip" id="userChip" aria-haspopup="menu" aria-expanded="false">
+          <span class="avatar" id="userAvatar">?</span>
+          <span class="user-meta">
+            <span class="user-name" id="userName">Compte</span>
+            <span class="user-mail" id="userMail"></span>
+          </span>
+        </button>
+        <div class="menu" id="userMenu" role="menu" hidden>
+          <div class="menu-head">
+            <div class="name" id="menuName"></div>
+            <div class="mail" id="menuMail"></div>
+          </div>
+          <div class="menu-sep"></div>
+          <button class="menu-item" id="menuSettings" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.07A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.07a1.7 1.7 0 0 0-1.53 1Z"/></svg>
+            Paramètres du compte
+          </button>
+          <button class="menu-item" id="menuSecurity" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4.3 3 8.2 7 9 4-.8 7-4.7 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+            Sécurité
+          </button>
+          <div class="menu-sep"></div>
+          <button class="menu-item danger" id="menuLogout" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M12 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/></svg>
+            Se déconnecter
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ espace de travail ============ -->
+  <div class="workspace">
+    <!-- -------- sidebar -------- -->
+    <aside class="sidebar" id="sidebar">
+      <button class="btn-compose" id="createBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Nouvelle boîte</span>
+        <span class="kbd">N</span>
+      </button>
+
+      <div class="nav-section-label">
+        <span>Mes boîtes</span>
+        <button id="sortBtn" title="Trier les boîtes" aria-label="Trier les boîtes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h13M4 12h9M4 17h5"/></svg>
+        </button>
+      </div>
+
+      <div class="mailbox-list" id="mailboxList" role="list"></div>
+
+      <div class="sidebar-foot">
+        <button class="side-link" id="importBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 19h16"/></svg>
+          Importer une adresse
+        </button>
+        <button class="side-link" id="refreshAllBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+          Tout actualiser
+        </button>
+        <div class="side-link" style="cursor:default">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>
+          Ma collection
+          <span class="count" id="collectionCount">0</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- -------- liste + lecteur -------- -->
+    <div class="main-panel reading-collapsed" id="mainPanel">
+      <section class="list-pane" aria-label="Messages">
+        <div class="list-head">
+          <div class="list-head-top">
+            <div class="list-title" id="listTitle">Aucune boîte sélectionnée
+              <small id="listSubtitle">Créez votre première adresse temporaire</small>
+            </div>
+            <div class="list-head-actions">
+              <button class="icon-btn" id="markAllReadBtn" title="Tout marquer comme lu" aria-label="Tout marquer comme lu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 12 4 4L18 5M12 16l2 2 7-8"/></svg>
+              </button>
+              <button class="icon-btn" id="exportBtn" title="Exporter la boîte (XML)" aria-label="Exporter la boîte">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 19h16"/></svg>
+              </button>
+              <button class="icon-btn" id="mailboxMenuBtn" title="Options de la boîte" aria-label="Options de la boîte">
+                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="address-pill" id="addressPill" hidden>
+            <span class="addr" id="addressValue"></span>
+            <button id="copyAddressBtn" aria-label="Copier l'adresse">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.4"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              Copier
+            </button>
+          </div>
+
+          <div class="filters" id="filters" hidden>
+            <button class="filter-chip active" data-filter="all">Tous</button>
+            <button class="filter-chip" data-filter="unread">Non lus</button>
+            <button class="filter-chip" data-filter="codes">Codes</button>
+            <button class="filter-chip" data-filter="starred">Favoris</button>
+          </div>
+        </div>
+
+        <div class="message-list" id="messageList" role="list"></div>
+      </section>
+
+      <section class="reader" id="reader" aria-label="Lecture du message">
+        <div class="reader-head">
+          <button class="icon-btn" id="readerBack" aria-label="Retour à la liste" title="Retour">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-7-7 7 7 7"/></svg>
+          </button>
+          <span class="subject-line" id="readerSubject"></span>
+          <div style="margin-left:auto;display:flex;gap:2px">
+            <button class="icon-btn" id="readerStar" aria-label="Ajouter aux favoris" title="Favori">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>
+            </button>
+            <button class="icon-btn" id="readerDelete" aria-label="Supprimer le message" title="Supprimer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="reader-body-wrap" id="readerBody"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ============ modales ============ -->
+
+<!-- création de boîte -->
+<div class="modal-backdrop" id="createModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="createTitle">
+    <div class="modal-head">
+      <div>
+        <h3 id="createTitle">Nouvelle boîte temporaire</h3>
+        <p class="hint" style="margin-top:4px">L'adresse est générée sur eztempmail puis archivée dans votre collection.</p>
+      </div>
+      <button class="icon-btn" data-close="createModal" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="newLocal">Nom de l'adresse <span style="font-weight:400;color:var(--text-faint)">(facultatif)</span></label>
+        <div style="display:flex;align-items:center;gap:0">
+          <input class="input" id="newLocal" placeholder="laissez vide pour un nom aléatoire" maxlength="32" style="border-top-right-radius:0;border-bottom-right-radius:0;border-right:0">
+          <span style="padding:12px 10px;background:var(--surface-2);border:1px solid var(--border-strong);border-left:0;border-right:0;color:var(--text-faint);font-size:14px">@</span>
+          <select class="input" id="newDomain" style="border-top-left-radius:0;border-bottom-left-radius:0;min-width:170px;max-width:200px"></select>
+        </div>
+        <p class="hint" id="newAddressPreview">—</p>
+      </div>
+      <div class="field">
+        <label for="newLabel">Étiquette <span style="font-weight:400;color:var(--text-faint)">(facultatif)</span></label>
+        <input class="input" id="newLabel" placeholder="Netflix, Discord, test…" maxlength="60">
+      </div>
+      <div class="alert alert-error" id="createError" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        <span id="createErrorText"></span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="createModal">Annuler</button>
+      <button class="btn btn-primary" id="createConfirm">Créer la boîte</button>
+    </div>
+  </div>
+</div>
+
+<!-- import -->
+<div class="modal-backdrop" id="importModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="modal-head">
+      <div>
+        <h3 id="importTitle">Importer une adresse existante</h3>
+        <p class="hint" style="margin-top:4px">Récupérez une adresse eztempmail déjà créée pour l'archiver ici.</p>
+      </div>
+      <button class="icon-btn" data-close="importModal" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="importAddress">Adresse complète</label>
+        <input class="input" id="importAddress" placeholder="adresse@domaine.com" autocomplete="off">
+        <p class="hint">L'adresse doit être libre sur eztempmail. Sinon, une adresse proche sera proposée.</p>
+      </div>
+      <div class="field">
+        <label for="importLabel">Étiquette <span style="font-weight:400;color:var(--text-faint)">(facultatif)</span></label>
+        <input class="input" id="importLabel" placeholder="Ex. ancien compte" maxlength="60">
+      </div>
+      <div class="alert alert-error" id="importError" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        <span id="importErrorText"></span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="importModal">Annuler</button>
+      <button class="btn btn-primary" id="importConfirm">Importer</button>
+    </div>
+  </div>
+</div>
+
+<!-- options de la boîte -->
+<div class="modal-backdrop" id="boxModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="boxTitle">
+    <div class="modal-head">
+      <h3 id="boxTitle">Options de la boîte</h3>
+      <button class="icon-btn" data-close="boxModal" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="address-pill" style="border-style:solid">
+        <span class="addr" id="boxAddress"></span>
+        <button id="boxCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.4"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> Copier</button>
+      </div>
+      <div class="field">
+        <label for="boxLabelEdit">Étiquette</label>
+        <input class="input" id="boxLabelEdit" maxlength="60" placeholder="Nom court pour cette boîte">
+      </div>
+      <div class="field">
+        <label for="boxNotes">Notes</label>
+        <textarea class="input" id="boxNotes" maxlength="400" placeholder="À quoi sert cette adresse ?"></textarea>
+      </div>
+      <div class="field">
+        <label for="boxLocal">Changer l'adresse</label>
+        <div style="display:flex;align-items:center;gap:0">
+          <input class="input" id="boxLocal" maxlength="32" placeholder="nouveau nom" style="border-top-right-radius:0;border-bottom-right-radius:0;border-right:0">
+          <span style="padding:12px 10px;background:var(--surface-2);border:1px solid var(--border-strong);border-left:0;border-right:0;color:var(--text-faint)">@</span>
+          <select class="input" id="boxDomain" style="border-top-left-radius:0;border-bottom-left-radius:0;min-width:165px;max-width:195px"></select>
+        </div>
+        <p class="hint">Le changement conserve les messages déjà archivés.</p>
+      </div>
+      <div class="alert alert-error" id="boxError" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        <span id="boxErrorText"></span>
+      </div>
+    </div>
+    <div class="modal-foot" style="justify-content:space-between">
+      <button class="btn btn-danger-soft" id="boxDelete">Supprimer la boîte</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" data-close="boxModal">Annuler</button>
+        <button class="btn btn-primary" id="boxSave">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- paramètres du compte -->
+<div class="modal-backdrop" id="settingsModal" hidden>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-head">
+      <h3 id="settingsTitle">Paramètres du compte</h3>
+      <button class="icon-btn" data-close="settingsModal" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:14px;align-items:center;padding:14px;border-radius:12px;background:var(--surface-2)">
+        <span class="avatar" id="settingsAvatar" style="width:46px;height:46px;font-size:17px"></span>
+        <div style="min-width:0">
+          <div style="font-weight:650;font-size:15px" id="settingsName"></div>
+          <div style="font-size:12.5px;color:var(--text-faint);word-break:break-all" id="settingsEmail"></div>
+        </div>
+        <span class="chip chip-success" style="margin-left:auto" id="settingsVerified">Vérifié</span>
+      </div>
+
+      <div class="field">
+        <label>Mot de passe</label>
+        <div style="display:grid;gap:10px">
+          <input class="input" type="password" id="curPassword" placeholder="Mot de passe actuel" autocomplete="current-password">
+          <input class="input" type="password" id="newPassword" placeholder="Nouveau mot de passe" autocomplete="new-password">
+          <input class="input" type="password" id="newPassword2" placeholder="Confirmer le nouveau mot de passe" autocomplete="new-password">
+          <button class="btn btn-outline" id="changePasswordBtn" style="justify-self:start">Mettre à jour le mot de passe</button>
+        </div>
+        <p class="hint">Toutes les autres sessions seront déconnectées après le changement.</p>
+      </div>
+
+      <div class="alert alert-error" id="settingsError" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        <span id="settingsErrorText"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- sécurité -->
+<div class="modal-backdrop" id="securityModal" hidden>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="securityTitle">
+    <div class="modal-head">
+      <h3 id="securityTitle">Sécurité</h3>
+      <button class="icon-btn" data-close="securityModal" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="totpSection"></div>
+      <div style="height:1px;background:var(--border)"></div>
+      <div>
+        <h4 style="font-size:14px;margin-bottom:4px">Sessions actives</h4>
+        <p class="hint" style="margin-bottom:12px">Révoquez toute session que vous ne reconnaissez pas.</p>
+        <div id="sessionList" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div class="alert alert-error" id="securityError" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        <span id="securityErrorText"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- activation TOTP -->
+<div class="modal-backdrop" id="totpModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="totpTitle">
+    <div class="modal-head">
+      <h3 id="totpTitle">Configurer la double authentification</h3>
+      <button class="icon-btn" data-close="totpModal" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="hint">Ajoutez cette clé dans votre application d'authentification (Google Authenticator, Aegis, 1Password…), puis saisissez le code généré.</p>
+      <div class="field">
+        <label>Clé secrète</label>
+        <div class="address-pill" style="border-style:solid">
+          <span class="addr" id="totpSecret" style="font-size:13px"></span>
+          <button id="copyTotpSecret">Copier</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="totpCode">Code à 6 chiffres</label>
+        <input class="input" id="totpCode" inputmode="numeric" maxlength="6" placeholder="123456" style="font-family:var(--mono);letter-spacing:.3em;font-size:18px;text-align:center">
+      </div>
+      <div class="alert alert-error" id="totpError" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        <span id="totpErrorText"></span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="totpModal">Annuler</button>
+      <button class="btn btn-primary" id="totpConfirm">Activer</button>
+    </div>
+  </div>
+</div>
+
+<!-- codes de secours -->
+<div class="modal-backdrop" id="backupModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="backupTitle">
+    <div class="modal-head">
+      <h3 id="backupTitle">Codes de secours</h3>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        <span>Conservez ces codes hors ligne. Chacun ne peut être utilisé qu'une seule fois.</span>
+      </div>
+      <div class="backup-codes" id="backupCodes"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" id="backupCopy">Copier tout</button>
+      <button class="btn btn-primary" data-close="backupModal">J'ai sauvegardé</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/assets/js/app.js"></script>
+</body>
+</html>

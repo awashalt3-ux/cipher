@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vérification — Cipher Mail</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/css/base.css">
+<link rel="stylesheet" href="/assets/css/auth.css">
+</head>
+<body>
+
+<div class="auth-wrap">
+  <aside class="auth-aside">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="-0.5 -0.5 25 25" fill="currentColor" aria-hidden="true"><path d="m16.484 11.976 6.151-5.344v10.627zm-7.926.905 2.16 1.875c.339.288.781.462 1.264.462h.017-.001.014c.484 0 .926-.175 1.269-.465l-.003.002 2.16-1.875 6.566 5.639h-20.009zm-6.572-7.516h20.03l-9.621 8.356c-.104.082-.236.132-.38.132-.005 0-.009 0-.014 0h.001c-.004 0-.009 0-.014 0-.144 0-.277-.05-.381-.133l.001.001zm-.621 1.266 6.15 5.344-6.15 5.28zm21.6-2.441c-.24-.12-.522-.19-.821-.19h-20.285c-.3.001-.584.071-.835.197l.011-.005c-.618.309-1.035.937-1.035 1.663v.004 12.168c.001 1.026.833 1.857 1.858 1.858h20.283c1.026-.001 1.857-.833 1.858-1.858v-12.168c0-.001 0-.002 0-.004 0-.727-.419-1.357-1.029-1.66l-.011-.005z"/></svg>
+      </span>
+      <span>Cipher Mail</span>
+    </a>
+
+    <div class="aside-body">
+      <span class="auth-kicker">Sécurité du compte</span>
+      <h2>Dernière étape avant<br><em>votre collection.</em></h2>
+      <p class="lede">
+        La confirmation de votre adresse protège l'accès aux codes de vérification
+        stockés dans vos boîtes temporaires.
+      </p>
+    </div>
+
+    <p class="aside-foot">
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+        Lien valable 24 heures
+      </span>
+      <span style="margin-left:auto">Usage unique</span>
+    </p>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card" style="text-align:center">
+      <div class="verify-icon" id="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+      </div>
+      <h1 id="title">Vérification en cours…</h1>
+      <p class="sub" id="subtitle" style="margin-bottom:24px">Un instant, nous confirmons votre adresse.</p>
+      <div id="actions" style="display:flex;flex-direction:column;gap:10px;text-align:left"></div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { api, initTheme } from "/assets/js/common.js";
+
+initTheme();
+
+const icon = document.getElementById("icon");
+const title = document.getElementById("title");
+const subtitle = document.getElementById("subtitle");
+const actions = document.getElementById("actions");
+
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg>';
+const ERROR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6m0-6-6 6"/></svg>';
+
+function render(ok, heading, message, buttons) {
+  icon.className = `verify-icon ${ok ? "ok" : "err"}`;
+  icon.innerHTML = ok ? CHECK : ERROR;
+  title.textContent = heading;
+  subtitle.textContent = message;
+  actions.innerHTML = buttons;
+}
+
+const token = new URLSearchParams(location.search).get("token");
+
+if (!token) {
+  render(false, "Lien incomplet", "Ce lien de confirmation est incomplet. Ouvrez celui reçu par email.", '<a class="btn btn-primary btn-block" href="/login">Retour à la connexion</a>');
+} else {
+  try {
+    const data = await api("/api/auth/verify", { method: "POST", body: { token } });
+    render(true, "Adresse confirmée", data.message || "Votre compte est actif. Vous pouvez maintenant vous connecter.", '<a class="btn btn-primary btn-block" href="/login">Se connecter</a>');
+  } catch (error) {
+    render(false, "Confirmation impossible", error.message || "Ce lien est invalide ou expiré.", '<a class="btn btn-primary btn-block" href="/login">Retour à la connexion</a><a class="btn btn-outline btn-block" href="/register">Créer un compte</a>');
+  }
+}
+</script>
+</body>
+</html>
