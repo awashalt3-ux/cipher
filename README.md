@@ -1,6 +1,6 @@
 # Cipher Mail
 
-Gestionnaire de boîtes **temp mail** (eztempmail.com) avec boîte de réception moderne type Gmail,
+Gestionnaire de boîtes **temp mail** (eztempmail.com) avec boîte de réception,
 stockage permanent de toutes les adresses et de leurs messages, et compte sécurisé.
 
 [![Node.js](https://img.shields.io/badge/node-%E2%89%A522.5-3c873a?logo=node.js&logoColor=white)](https://nodejs.org)
