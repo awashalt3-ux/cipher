@@ -1,5 +1,6 @@
 import { q } from "./db.js";
 import { config } from "./config.js";
+import { OUTBOX_DIR } from "./paths.js";
 import { id, now, encrypt, decrypt, previewText, detectCode } from "./util.js";
 import * as ez from "./eztempmail.js";
 
@@ -12,22 +13,7 @@ function sessionFor(mailbox) {
   };
 }
 
-function persistSession(mailboxId, session) {
-  q.run(
-    "UPDATE mailboxes SET ez_session = ?, ez_csrf = ? WHERE id = ?",
-    encrypt(JSON.stringify(session.jar || {}), config.secret),
-    encrypt(session.csrf || "", config.secret),
-    mailboxId,
-  );
-}
-
 /* ---------------- stockage des messages ---------------- */
-
-function normalizeAddress(value) {
-  const text = String(value || "").trim();
-  const match = text.match(/<([^>]+)>/);
-  return (match ? match[1] : text).trim();
-}
 
 function splitName(value) {
   const text = String(value || "").trim();
@@ -36,13 +22,14 @@ function splitName(value) {
   return { name: "", email: text };
 }
 
-function messageExists(mailboxId, remoteId) {
-  return Boolean(q.one("SELECT id FROM messages WHERE mailbox_id = ? AND remote_id = ?", mailboxId, String(remoteId)));
+async function messageExists(mailboxId, remoteId) {
+  const row = await q.one("SELECT id FROM messages WHERE mailbox_id = ? AND remote_id = ?", mailboxId, String(remoteId));
+  return Boolean(row);
 }
 
-function insertMessage(mailbox, raw) {
+async function insertMessage(mailbox, raw) {
   const remoteId = String(raw.remoteId ?? raw.id ?? "");
-  if (!remoteId || messageExists(mailbox.id, remoteId)) return null;
+  if (!remoteId || (await messageExists(mailbox.id, remoteId))) return null;
 
   const parsedFrom = splitName(raw.fromEmail || raw.from_email || raw.from || "");
   const fromName = String(raw.fromName || "").trim() || parsedFrom.name || parsedFrom.email.split("@")[0] || "Inconnu";
@@ -52,7 +39,7 @@ function insertMessage(mailbox, raw) {
   const messageId = id("MSG");
   const preview = previewText(html);
 
-  q.run(
+  await q.run(
     `INSERT INTO messages
        (id, mailbox_id, user_id, remote_id, from_name, from_email, to_email, subject, preview, body_html, body_text, code, received_at, stored_at, read_at, starred, has_attachments)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL, 0, ?)`,
@@ -73,7 +60,7 @@ function insertMessage(mailbox, raw) {
   );
 
   for (const file of attachments) {
-    q.run(
+    await q.run(
       `INSERT INTO attachments (id, message_id, user_id, filename, content_type, size, remote_url, stored_path, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
       id("ATT"), messageId, mailbox.user_id, file.filename, file.contentType, file.size, file.remoteUrl, now(),
@@ -108,10 +95,11 @@ function extractFromView(html) {
 
 export async function fetchMessageBody(mailbox, remoteId) {
   const session = sessionFor(mailbox);
-  const res = await ez.openSession(session.jar, session.csrf);
+  const opened = await ez.openSession(session.jar, session.csrf);
+  const cookieHeader = Object.entries(opened.jar).map(([k, v]) => `${k}=${v}`).join("; ");
   const page = await fetch(`https://www.eztempmail.com/view/${encodeURIComponent(remoteId)}`, {
     headers: {
-      Cookie: Object.entries(res.jar).map(([k, v]) => `${k}=${v}`).join("; "),
+      Cookie: cookieHeader,
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
       Referer: "https://www.eztempmail.com/",
@@ -126,7 +114,7 @@ export async function fetchMessageBody(mailbox, remoteId) {
     const url = extracted.iframeSrc.startsWith("http") ? extracted.iframeSrc : `https://www.eztempmail.com${extracted.iframeSrc}`;
     const inner = await fetch(url, {
       headers: {
-        Cookie: Object.entries(res.jar).map(([k, v]) => `${k}=${v}`).join("; "),
+        Cookie: cookieHeader,
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
       },
@@ -163,7 +151,7 @@ export async function syncMailbox(mailbox, { deep = false } = {}) {
   try {
     opened = await ez.openSession(session.jar, session.csrf);
   } catch (error) {
-    markFailure(mailbox, error.message);
+    await markFailure(mailbox, error.message);
     return { ok: false, reason: error.message };
   }
 
@@ -171,14 +159,14 @@ export async function syncMailbox(mailbox, { deep = false } = {}) {
   try {
     inbox = await ez.fetchInbox(opened);
   } catch (error) {
-    markFailure(mailbox, error.message);
+    await markFailure(mailbox, error.message);
     return { ok: false, reason: error.message };
   }
 
-  let mailboxId = mailbox.id;
+  const mailboxId = mailbox.id;
   const addressChanged = inbox.mailbox && inbox.mailbox !== mailbox.address;
 
-  q.run(
+  await q.run(
     `UPDATE mailboxes
         SET ez_session = ?, ez_csrf = ?, last_polled_at = ?, status = 'active',
             address = COALESCE(?, address),
@@ -202,23 +190,22 @@ export async function syncMailbox(mailbox, { deep = false } = {}) {
   for (const raw of inbox.messages) {
     const normalized = ez.normalizeMessage(raw);
     if (!normalized.remoteId) continue;
-    const created = insertMessage(effective, normalized);
+    const created = await insertMessage(effective, normalized);
     if (created) added += 1;
   }
 
-  // Complète les messages sans corps (chargement à la demande côté client possible)
   if (added > 0) {
     subscribers.emit(mailbox.user_id, { type: "new-mail", mailboxId, count: added, address: effective.address });
   }
 
-  q.run("UPDATE mailboxes SET last_seen_at = ? WHERE id = ?", now(), mailboxId);
+  await q.run("UPDATE mailboxes SET last_seen_at = ? WHERE id = ?", now(), mailboxId);
   return { ok: true, address: effective.address, added, total: inbox.messages.length };
 }
 
-function markFailure(mailbox, reason) {
+async function markFailure(mailbox, reason) {
   const message = String(reason || "");
   const expired = /session|expir/i.test(message);
-  q.run(
+  await q.run(
     "UPDATE mailboxes SET status = ?, last_polled_at = ? WHERE id = ?",
     expired ? "expired" : mailbox.status === "expired" ? "expired" : "error",
     now(),
@@ -272,7 +259,7 @@ export function startSyncLoop() {
     if (running) return;
     running = true;
     try {
-      const rows = q.all(
+      const rows = await q.all(
         `SELECT * FROM mailboxes
           WHERE status IN ('active', 'error')
           ORDER BY COALESCE(last_polled_at, 0) ASC
@@ -296,3 +283,5 @@ export function stopSyncLoop() {
   if (timer) clearTimeout(timer);
   timer = null;
 }
+
+export { OUTBOX_DIR };

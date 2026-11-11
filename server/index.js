@@ -2,7 +2,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { config } from "./config.js";
-import { q } from "./db.js";
+import { dbReady, dbInfo } from "./db.js";
 import { sessionFromRequest, touchSession, parseCookies, COOKIE, clientIp } from "./auth.js";
 import { sendJson, serveStatic, readJson, addCookies } from "./http.js";
 import { startSyncLoop } from "./sync.js";
@@ -187,14 +187,14 @@ async function handle(req, res) {
   // session
   let sessionCtx = null;
   try {
-    sessionCtx = sessionFromRequest(req);
+    sessionCtx = await sessionFromRequest(req);
   } catch (error) {
     console.error("[session]", error.message);
   }
   if (sessionCtx) {
     ctx.session = sessionCtx.session;
     ctx.user = sessionCtx.user;
-    touchSession(sessionCtx.session);
+    touchSession(sessionCtx.session).catch(() => {});
   }
 
   if (route.options.auth && !ctx.user) {
@@ -247,20 +247,37 @@ export function createServer() {
   });
 }
 
-if (process.argv[1] && process.argv[1].endsWith("index.js")) {
+/** Démarre le serveur : la base doit être prête avant d'accepter du trafic. */
+export async function start() {
+  await dbReady();
   const server = createServer();
-  server.listen(config.port, config.host, () => {
-    console.log(`\n  Cipher Mail — ${config.appUrl}`);
-    console.log(`  données : ${config.dataDir}`);
-    console.log(`  SMTP    : ${config.smtp.host ? config.smtp.host : "non configuré (emails dans data/outbox)"}`);
-    console.log(`  vérification email : ${config.requireEmailVerification ? "activée" : "désactivée"}\n`);
-    startSyncLoop();
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(config.port, config.host, resolve);
   });
-  for (const signal of ["SIGINT", "SIGTERM"]) {
-    process.on(signal, () => {
-      console.log("\nArrêt…");
-      server.close(() => process.exit(0));
-      setTimeout(() => process.exit(0), 2000).unref();
-    });
-  }
+
+  const info = await dbInfo();
+  console.log(`\n  Cipher Mail — ${config.appUrl}`);
+  console.log(`  écoute  : http://${config.host}:${config.port}`);
+  console.log(`  base    : ${info.kind}${info.sqliteFile ? ` (${info.sqliteFile})` : ""}`);
+  console.log(`  SMTP    : ${config.smtp.host ? config.smtp.host : "non configuré (emails dans l'outbox)"}`);
+  console.log(`  vérification email : ${config.requireEmailVerification ? "activée" : "désactivée"}\n`);
+
+  startSyncLoop();
+
+  const shutdown = () => {
+    console.log("\nArrêt…");
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 2000).unref();
+  };
+  for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, shutdown);
+
+  return server;
+}
+
+if (process.argv[1] && process.argv[1].endsWith("index.js")) {
+  start().catch((error) => {
+    console.error("[démarrage] échec:", error);
+    process.exit(1);
+  });
 }

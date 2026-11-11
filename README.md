@@ -30,6 +30,7 @@ l'outbox sont créés automatiquement dans `data/` au premier démarrage.
 | **Changement d'adresse** | Renomme une boîte existante sans perdre les messages déjà archivés. |
 | **Export** | Téléchargement XML complet d'une boîte (métadonnées + HTML des messages). |
 | **Compte sécurisé** | Hachage scrypt, confirmation d'adresse, TOTP + codes de secours, gestion des sessions, journal d'audit. |
+| **Session persistante** | « Rester connecté » : cookie 90 jours prolongé à chaque visite. Pas de reconnexion à répétition. |
 | **Rendu des emails** | Shadow DOM isolé, scripts neutralisés, images distantes bloquées par défaut. |
 
 ---
@@ -49,7 +50,10 @@ l'outbox sont créés automatiquement dans `data/` au premier démarrage.
 
 **Sessions**
 - Jeton opaque de 32 octets ; seul son SHA-256 est stocké.
-- Cookie `HttpOnly`, `SameSite=Lax`, `Secure` automatique en HTTPS.
+- Cookie `HttpOnly`, `SameSite=Lax`, `Secure` automatique en HTTPS (détecté via `X-Forwarded-Proto`).
+- **« Rester connecté »** coché par défaut : cookie persistant **90 jours**, prolongé automatiquement
+  à chaque visite (aucune reconnexion tant que le site est utilisé). Décoché : cookie de session,
+  effacé à la fermeture du navigateur.
 - Jeton CSRF par session, exigé sur toutes les mutations (`X-CSRF-Token`).
 - Liste des sessions avec IP/agent, révocation à distance, purge au changement de mot de passe.
 
@@ -62,16 +66,37 @@ l'outbox sont créés automatiquement dans `data/` au premier démarrage.
 
 ## Configuration
 
-Tout est optionnel : sans variable, l'app fonctionne en local.
+Tout est optionnel en local : sans variable, l'app utilise SQLite et fonctionne hors ligne.
+
+### Base de données
+
+| Contexte | Moteur | Déclencheur |
+|---|---|---|
+| Local | SQLite (`node:sqlite`) | aucune variable `DB_*` |
+| Wasmer Edge / hébergé | **PostgreSQL** | `DB_HOST` ou `DATABASE_URL` |
+
+Sur Wasmer Edge, `app.yaml` active `capabilities.database: postgres` : la plateforme provisionne
+la base et injecte `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`. Le schéma est
+créé automatiquement au premier démarrage.
+
+> SQLite natif n'existe pas sur le runtime WebAssembly de Wasmer Edge (pas de binding `sqlite`).
+> C'est pourquoi l'import est dynamique : en local il réussit, sur Edge il bascule sur Postgres
+> au lieu de faire planter le processus.
+
+### Variables
 
 | Variable | Défaut | Rôle |
 |---|---|---|
-| `PORT` / `HOST` | `4317` / `127.0.0.1` | Écoute HTTP |
-| `CIPHER_APP_URL` | `http://127.0.0.1:4317` | URL publique (liens de confirmation) |
+| `PORT` / `HOST` | `4317` / `0.0.0.0` | Écoute HTTP |
+| `CIPHER_APP_URL` | déduit | URL publique (liens de confirmation, cookies `Secure`) |
 | `CIPHER_SECRET` | généré dans `data/secret.key` | Clé de chiffrement au repos |
-| `CIPHER_DATA_DIR` | `./data` | Emplacement de la base et des fichiers |
+| `CIPHER_DATA_DIR` | `./data` | Emplacement de la base SQLite et de l'outbox |
 | `CIPHER_SKIP_VERIFICATION` | — | `1` pour désactiver la confirmation d'email (déconseillé) |
 | `POLL_INTERVAL_MS` | `8000` | Fréquence de relève des boîtes |
+| `DB_HOST` / `DB_PORT` / `DB_NAME` | — | Postgres managé (injecté par la plateforme) |
+| `DB_USERNAME` / `DB_PASSWORD` | — | Identifiants Postgres |
+| `DATABASE_URL` | — | Alternative complète à `DB_*` |
+| `DB_SSL` | `on` | `off` pour désactiver TLS (déconseillé) |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` | — | Serveur SMTP d'envoi |
 | `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | — | Identifiants et expéditeur |
 
@@ -94,8 +119,10 @@ npm start
 
 ```
 server/
-  index.js            routeur HTTP, CSP, desserte des pages
-  db.js               schéma SQLite + helpers (WAL, transactions)
+  index.js            routeur HTTP, CSP, desserte des pages, démarrage
+  main.js             point d'entrée explicite (plateformes type Wasmer)
+  paths.js            chemins + bascule vers un dossier inscriptible
+  db.js               Postgres (pg) ou SQLite (node:sqlite) + schéma
   auth.js             sessions, CSRF, limitation de débit, audit
   routes.auth.js      inscription, confirmation, connexion, TOTP, sessions
   routes.mailboxes.js boîtes, messages, export
@@ -111,6 +138,7 @@ public/
   assets/css/         base.css · app.css · public.css
   assets/js/          common.js · app.js
 data/                 base SQLite, clé, outbox (créé au démarrage)
+app.yaml              configuration de déploiement Wasmer Edge
 ```
 
 ## Comment le stockage fonctionne
@@ -143,6 +171,16 @@ npm run dev        # redémarrage automatique (node --watch)
 
 Les pages sont servies en statique depuis `public/` ; toute la logique est côté serveur (`server/`).
 Pour tester hors ligne, aucun SMTP n'est requis : voir [Email sans SMTP](#email-sans-smtp).
+
+## Déploiement (Wasmer Edge)
+
+```bash
+wasmer login
+wasmer deploy          # lit app.yaml : app « ciphermail », Postgres managé, un volume non requis
+```
+
+`app.yaml` demande une base **Postgres** : Wasmer l'injecte via `DB_*`, le schéma se crée tout seul.
+Le serveur écoute sur `0.0.0.0:$PORT` et `CIPHER_APP_URL` fixe l'URL publique (liens + cookies `Secure`).
 
 ## Licence
 

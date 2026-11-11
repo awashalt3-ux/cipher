@@ -6,7 +6,7 @@ import {
 import { q } from "./db.js";
 import { config } from "./config.js";
 import {
-  createSession, destroySession, publicUser, audit, rateLimit, clientIp, COOKIE, cookie, clearCookie,
+  createSession, destroySession, publicUser, audit, rateLimit, clientIp, isHttps, COOKIE, cookie, clearCookie,
 } from "./auth.js";
 import { sendMail, verificationEmail, alertEmail } from "./mailer.js";
 
@@ -16,14 +16,14 @@ export function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-function newVerificationToken(userId) {
+async function newVerificationToken(userId) {
   const token = randomToken(24);
-  q.run("UPDATE users SET verify_token = ?, verify_sent_at = ? WHERE id = ?", sha256(token), now(), userId);
+  await q.run("UPDATE users SET verify_token = ?, verify_sent_at = ? WHERE id = ?", sha256(token), now(), userId);
   return token;
 }
 
 async function dispatchVerification(user) {
-  const token = newVerificationToken(user.id);
+  const token = await newVerificationToken(user.id);
   const link = `${config.appUrl}/verify?token=${encodeURIComponent(token)}`;
   const mail = verificationEmail({ name: user.display_name, link });
   try {
@@ -52,20 +52,20 @@ export async function register({ body, req }) {
   const problems = passwordProblems(password);
   if (problems.length) return fail(400, `Mot de passe trop faible : il manque ${problems.join(", ")}.`);
 
-  const existing = q.one("SELECT id FROM users WHERE email = ?", email);
+  const existing = await q.one("SELECT id FROM users WHERE email = ?", email);
   if (existing) return fail(409, "Un compte existe déjà avec cette adresse.");
 
   const userId = id("USR");
   const createdAt = now();
-  q.run(
+  await q.run(
     `INSERT INTO users (id, email, display_name, password_hash, email_verified, created_at)
      VALUES (?, ?, ?, ?, 0, ?)`,
     userId, email, displayName, hashPassword(password), createdAt,
   );
 
-  const user = q.one("SELECT * FROM users WHERE id = ?", userId);
+  const user = await q.one("SELECT * FROM users WHERE id = ?", userId);
   const { link, mail } = await dispatchVerification(user);
-  audit(userId, "register", email, ip);
+  await audit(userId, "register", email, ip);
 
   return {
     status: 201,
@@ -82,20 +82,20 @@ export async function register({ body, req }) {
 export async function verifyEmail({ body, req }) {
   const token = String(body.token || "");
   if (!token) return fail(400, "Jeton manquant.");
-  const user = q.one("SELECT * FROM users WHERE verify_token = ?", sha256(token));
+  const user = await q.one("SELECT * FROM users WHERE verify_token = ?", sha256(token));
   if (!user) return fail(400, "Lien de confirmation invalide ou déjà utilisé.");
   if (user.verify_sent_at && now() - Number(user.verify_sent_at) > 24 * 3600 * 1000) {
     return fail(400, "Ce lien a expiré. Demandez un nouvel email de confirmation.");
   }
-  q.run("UPDATE users SET email_verified = 1, verify_token = NULL WHERE id = ?", user.id);
-  audit(user.id, "email_verified", user.email, clientIp(req));
+  await q.run("UPDATE users SET email_verified = 1, verify_token = NULL WHERE id = ?", user.id);
+  await audit(user.id, "email_verified", user.email, clientIp(req));
   return { status: 200, body: { ok: true, message: "Adresse confirmée. Vous pouvez vous connecter." } };
 }
 
 export async function resendVerification({ session }) {
-  const user = q.one("SELECT * FROM users WHERE id = ?", session.user_id);
+  const user = await q.one("SELECT * FROM users WHERE id = ?", session.user_id);
   if (!user) return fail(404, "Compte introuvable.");
-  if (user.email_verified) return fail(400, "Cette adresse est déjà confirmée.");
+  if (Number(user.email_verified)) return fail(400, "Cette adresse est déjà confirmée.");
   const limit = rateLimit(`verify:${user.id}`, 3, 15 * 60 * 1000);
   if (!limit.allowed) return fail(429, "Patientez avant de demander un nouvel email.");
   const { link } = await dispatchVerification(user);
@@ -112,10 +112,10 @@ export async function resendPublic({ body, req }) {
   const limit = rateLimit(`resend:${ip}`, 5, 15 * 60 * 1000);
   if (!limit.allowed) return fail(429, "Trop de demandes. Réessayez dans quelques minutes.");
 
-  const user = EMAIL_RE.test(email) ? q.one("SELECT * FROM users WHERE email = ?", email) : null;
-  if (user && !user.email_verified) {
+  const user = EMAIL_RE.test(email) ? await q.one("SELECT * FROM users WHERE email = ?", email) : null;
+  if (user && !Number(user.email_verified)) {
     const { link } = await dispatchVerification(user);
-    audit(user.id, "verification_resent", email, ip);
+    await audit(user.id, "verification_resent", email, ip);
     return { status: 200, body: { ok: true, previewLink: config.smtpConfigured ? undefined : link } };
   }
   return { status: 200, body: { ok: true } };
@@ -128,49 +128,61 @@ export async function login({ body, req, res }) {
   const limit = rateLimit(`login:${ip}:${email}`, 8, 15 * 60 * 1000);
   if (!limit.allowed) return fail(429, `Trop de tentatives. Réessayez dans ${limit.retryAfter}s.`);
 
-  const user = q.one("SELECT * FROM users WHERE email = ?", email);
+  // « Rester connecté » : coché par défaut, l'utilisateur garde l'accès 90 jours.
+  const remember = body.remember !== false;
+
+  const user = await q.one("SELECT * FROM users WHERE email = ?", email);
   // toujours exécuter un hachage pour éviter les attaques temporelles
   const stored = user?.password_hash || "scrypt$16384$8$1$00$00";
   const valid = verifyPassword(password, stored);
   if (!user || !valid) {
-    audit(user?.id || null, "login_failed", email, ip);
+    await audit(user?.id || null, "login_failed", email, ip);
     return fail(401, "Email ou mot de passe incorrect.");
   }
 
-  if (config.requireEmailVerification && !user.email_verified) {
+  if (config.requireEmailVerification && !Number(user.email_verified)) {
     return fail(403, "Confirmez votre adresse email avant de vous connecter.", { code: "unverified" });
   }
 
-  if (user.totp_enabled) {
+  if (Number(user.totp_enabled)) {
     const code = String(body.totp || "").trim();
     if (!code) return fail(401, "Code d'authentification à deux facteurs requis.", { code: "totp_required" });
     const secret = decrypt(user.totp_secret, config.secret);
     const okTotp = secret && verifyTotp(secret, code);
-    const okBackup = !okTotp && consumeBackupCode(user, code);
+    const okBackup = !okTotp && (await consumeBackupCode(user, code));
     if (!okTotp && !okBackup) {
-      audit(user.id, "login_totp_failed", email, ip);
+      await audit(user.id, "login_totp_failed", email, ip);
       return fail(401, "Code à deux facteurs invalide.", { code: "totp_invalid" });
     }
-    if (okBackup) audit(user.id, "backup_code_used", email, ip);
+    if (okBackup) await audit(user.id, "backup_code_used", email, ip);
   }
 
-  const sessions = q.all("SELECT id FROM sessions WHERE user_id = ? ORDER BY created_at ASC", user.id);
+  const sessions = await q.all("SELECT id FROM sessions WHERE user_id = ? ORDER BY created_at ASC", user.id);
   if (sessions.length >= 8) {
-    for (const old of sessions.slice(0, sessions.length - 7)) destroySession(old.id);
+    for (const old of sessions.slice(0, sessions.length - 7)) await destroySession(old.id);
   }
 
-  const created = createSession(user.id, { ip, userAgent: req.headers["user-agent"] || "" });
-  q.run("UPDATE users SET last_login_at = ? WHERE id = ?", now(), user.id);
-  audit(user.id, "login", email, ip);
+  const created = await createSession(user.id, {
+    ip,
+    userAgent: req.headers["user-agent"] || "",
+    remember,
+  });
+  await q.run("UPDATE users SET last_login_at = ? WHERE id = ?", now(), user.id);
+  await audit(user.id, "login", email, ip);
 
   return {
     status: 200,
-    body: { ok: true, user: publicUser({ ...user, last_login_at: now() }), csrf: created.csrf },
-    cookies: [cookie(COOKIE, created.token, { maxAge: config.sessionTtl })],
+    body: { ok: true, user: publicUser({ ...user, last_login_at: now() }), csrf: created.csrf, remember },
+    cookies: [
+      cookie(COOKIE, created.token, {
+        maxAge: remember ? created.ttl : null,
+        secure: isHttps(req),
+      }),
+    ],
   };
 }
 
-function consumeBackupCode(user, code) {
+async function consumeBackupCode(user, code) {
   if (!user.backup_codes) return false;
   const hashes = JSON.parse(decrypt(user.backup_codes, config.secret) || "[]");
   const normalized = String(code).toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -178,36 +190,36 @@ function consumeBackupCode(user, code) {
   const index = hashes.findIndex((entry) => safeEqual(entry, target));
   if (index < 0) return false;
   hashes.splice(index, 1);
-  q.run("UPDATE users SET backup_codes = ? WHERE id = ?", encrypt(JSON.stringify(hashes), config.secret), user.id);
+  await q.run("UPDATE users SET backup_codes = ? WHERE id = ?", encrypt(JSON.stringify(hashes), config.secret), user.id);
   return true;
 }
 
 export async function logout({ session, res }) {
   if (session) {
-    destroySession(session.id);
-    audit(session.user_id, "logout", "", "");
+    await destroySession(session.id);
+    await audit(session.user_id, "logout", "", "");
   }
   return { status: 200, body: { ok: true }, cookies: [clearCookie(COOKIE)] };
 }
 
 export async function me({ session }) {
   if (!session) return { status: 200, body: { ok: true, user: null } };
-  const user = q.one("SELECT * FROM users WHERE id = ?", session.user_id);
+  const user = await q.one("SELECT * FROM users WHERE id = ?", session.user_id);
   if (!user) return { status: 200, body: { ok: true, user: null } };
   return { status: 200, body: { ok: true, user: publicUser(user), csrf: session.csrf } };
 }
 
 export async function changePassword({ body, session, req }) {
-  const user = q.one("SELECT * FROM users WHERE id = ?", session.user_id);
+  const user = await q.one("SELECT * FROM users WHERE id = ?", session.user_id);
   if (!verifyPassword(String(body.currentPassword || ""), user.password_hash)) {
     return fail(403, "Mot de passe actuel incorrect.");
   }
   const problems = passwordProblems(String(body.newPassword || ""));
   if (problems.length) return fail(400, `Mot de passe trop faible : il manque ${problems.join(", ")}.`);
 
-  q.run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(body.newPassword), user.id);
-  q.run("DELETE FROM sessions WHERE user_id = ? AND id <> ?", user.id, session.id);
-  audit(user.id, "password_changed", "", clientIp(req));
+  await q.run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(body.newPassword), user.id);
+  await q.run("DELETE FROM sessions WHERE user_id = ? AND id <> ?", user.id, session.id);
+  await audit(user.id, "password_changed", "", clientIp(req));
 
   const mail = alertEmail({
     name: user.display_name,
@@ -221,8 +233,8 @@ export async function changePassword({ body, session, req }) {
 
 export async function setupTotp({ session }) {
   const secret = generateTotpSecret();
-  q.run("UPDATE users SET totp_pending_secret = ? WHERE id = ?", encrypt(secret, config.secret), session.user_id);
-  const user = q.one("SELECT * FROM users WHERE id = ?", session.user_id);
+  await q.run("UPDATE users SET totp_pending_secret = ? WHERE id = ?", encrypt(secret, config.secret), session.user_id);
+  const user = await q.one("SELECT * FROM users WHERE id = ?", session.user_id);
   return {
     status: 200,
     body: { ok: true, secret, otpauth: otpauthUrl(secret, user.email), account: user.email },
@@ -230,19 +242,19 @@ export async function setupTotp({ session }) {
 }
 
 export async function enableTotp({ body, session, req }) {
-  const user = q.one("SELECT * FROM users WHERE id = ?", session.user_id);
-  if (user.totp_enabled) return fail(400, "La double authentification est déjà active.");
+  const user = await q.one("SELECT * FROM users WHERE id = ?", session.user_id);
+  if (Number(user.totp_enabled)) return fail(400, "La double authentification est déjà active.");
   if (!user.totp_pending_secret) return fail(400, "Commencez par générer un secret.");
   const secret = decrypt(user.totp_pending_secret, config.secret);
   if (!secret || !checkTotp(secret, body.code)) return fail(400, "Code invalide. Vérifiez votre application d'authentification.");
 
   const codes = backupCodes(8);
   const hashes = codes.map((code) => sha256(code.replace(/[^A-Z0-9]/gi, "").toUpperCase()));
-  q.run(
+  await q.run(
     "UPDATE users SET totp_secret = ?, totp_enabled = 1, totp_pending_secret = NULL, backup_codes = ? WHERE id = ?",
     encrypt(secret, config.secret), encrypt(JSON.stringify(hashes), config.secret), user.id,
   );
-  audit(user.id, "totp_enabled", "", clientIp(req));
+  await audit(user.id, "totp_enabled", "", clientIp(req));
 
   const mail = alertEmail({
     name: user.display_name,
@@ -255,12 +267,12 @@ export async function enableTotp({ body, session, req }) {
 }
 
 export async function disableTotp({ body, session, req }) {
-  const user = q.one("SELECT * FROM users WHERE id = ?", session.user_id);
-  if (!user.totp_enabled) return fail(400, "La double authentification n'est pas active.");
+  const user = await q.one("SELECT * FROM users WHERE id = ?", session.user_id);
+  if (!Number(user.totp_enabled)) return fail(400, "La double authentification n'est pas active.");
   if (!verifyPassword(String(body.password || ""), user.password_hash)) return fail(403, "Mot de passe incorrect.");
 
-  q.run("UPDATE users SET totp_secret = NULL, totp_enabled = 0, backup_codes = NULL WHERE id = ?", user.id);
-  audit(user.id, "totp_disabled", "", clientIp(req));
+  await q.run("UPDATE users SET totp_secret = NULL, totp_enabled = 0, backup_codes = NULL WHERE id = ?", user.id);
+  await audit(user.id, "totp_disabled", "", clientIp(req));
   const mail = alertEmail({
     name: user.display_name,
     title: "Double authentification désactivée",
@@ -271,17 +283,17 @@ export async function disableTotp({ body, session, req }) {
 }
 
 export async function regenerateBackupCodes({ body, session }) {
-  const user = q.one("SELECT * FROM users WHERE id = ?", session.user_id);
-  if (!user.totp_enabled) return fail(400, "Activez d'abord la double authentification.");
+  const user = await q.one("SELECT * FROM users WHERE id = ?", session.user_id);
+  if (!Number(user.totp_enabled)) return fail(400, "Activez d'abord la double authentification.");
   if (!verifyPassword(String(body.password || ""), user.password_hash)) return fail(403, "Mot de passe incorrect.");
   const codes = backupCodes(8);
   const hashes = codes.map((code) => sha256(code.replace(/[^A-Z0-9]/gi, "").toUpperCase()));
-  q.run("UPDATE users SET backup_codes = ? WHERE id = ?", encrypt(JSON.stringify(hashes), config.secret), user.id);
+  await q.run("UPDATE users SET backup_codes = ? WHERE id = ?", encrypt(JSON.stringify(hashes), config.secret), user.id);
   return { status: 200, body: { ok: true, backupCodes: codes } };
 }
 
 export async function listSessions({ session }) {
-  const rows = q.all("SELECT * FROM sessions WHERE user_id = ? ORDER BY last_seen_at DESC", session.user_id);
+  const rows = await q.all("SELECT * FROM sessions WHERE user_id = ? ORDER BY last_seen_at DESC", session.user_id);
   return {
     status: 200,
     body: {
@@ -299,8 +311,8 @@ export async function listSessions({ session }) {
 }
 
 export async function revokeSession({ params, session }) {
-  const row = q.one("SELECT * FROM sessions WHERE id = ? AND user_id = ?", params.id, session.user_id);
+  const row = await q.one("SELECT * FROM sessions WHERE id = ? AND user_id = ?", params.id, session.user_id);
   if (!row) return fail(404, "Session introuvable.");
-  destroySession(row.id);
+  await destroySession(row.id);
   return { status: 200, body: { ok: true } };
 }

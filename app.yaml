@@ -1,0 +1,36 @@
+kind: wasmer.io/App.v0
+name: ciphermail
+owner: awashalt3-ux
+package: .
+description: Gestionnaire de boîtes temp mail — réception permanente, compte sécurisé.
+
+# Postgres managé : Wasmer injecte DB_HOST / DB_PORT / DB_NAME / DB_USERNAME / DB_PASSWORD.
+# Le schéma est créé automatiquement au démarrage.
+capabilities:
+  database:
+    engine: postgres
+
+# Une seule région : la base managée doit être dans la même que l'application.
+locality:
+  regions:
+    - fr-roub1
+
+# Le serveur écoute sur 0.0.0.0:$PORT (fourni par la plateforme).
+env:
+  HOST: "0.0.0.0"
+  CIPHER_APP_URL: "https://ciphermail.wasmer.app"
+
+# L'application démarre la relève des boîtes en tâche de fond.
+# Node gère la concurrence en asynchrone : on garde le mode de scaling par défaut.
+
+health_checks:
+  - http:
+      method: get
+      path: /
+      interval: 30s
+      timeout: 10s
+      unhealthy_threshold: 3
+      healthy_threshold: 1
+      expected_status_codes:
+        - 200
+        - 302

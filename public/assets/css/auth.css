@@ -276,6 +276,26 @@ html[data-theme="dark"] .auth-point .tick { background: var(--surface-2); border
 
 .auth-form .hint { font-size: 12px; line-height: 1.5; color: var(--text-faint); }
 
+/* « Rester connecté » : discret, sous le bouton principal */
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.check-row input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex: none;
+}
+.check-row:hover { color: var(--ink); }
+
 /* jauge de robustesse : segments fins, sans couleur criarde */
 .pw-meter {
   display: flex;

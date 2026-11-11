@@ -8,6 +8,7 @@ import tls from "node:tls";
 import fs from "node:fs";
 import path from "node:path";
 import { config, smtpConfigured } from "./config.js";
+import { OUTBOX_DIR } from "./paths.js";
 
 function encodeHeader(value) {
   const text = String(value || "");
@@ -141,10 +142,13 @@ export async function sendMail(mail) {
   if (smtpConfigured) {
     return sendSmtp(mail);
   }
-  const dir = path.join(config.dataDir, "outbox");
-  fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, `${Date.now()}-${mail.to.replace(/[^a-z0-9]/gi, "_")}.eml`);
-  fs.writeFileSync(file, buildMessage(mail));
+  try {
+    fs.mkdirSync(OUTBOX_DIR, { recursive: true });
+    const file = path.join(OUTBOX_DIR, `${Date.now()}-${mail.to.replace(/[^a-z0-9]/gi, "_")}.eml`);
+    fs.writeFileSync(file, buildMessage(mail));
+  } catch {
+    // Système de fichiers en lecture seule : la console suffit.
+  }
   console.log(`\n[mail:dev] → ${mail.to} | ${mail.subject}\n${mail.text}\n`);
   return true;
 }

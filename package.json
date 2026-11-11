@@ -5,8 +5,12 @@
   "type": "module",
   "description": "Gestionnaire de boîtes temp mail avec boîte de réception moderne, stockage permanent et sécurité de compte.",
   "engines": { "node": ">=22.5.0" },
+  "main": "server/main.js",
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js"
+  },
+  "optionalDependencies": {
+    "pg": "^8.13.1"
   }
 }

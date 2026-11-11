@@ -100,6 +100,11 @@
         </div>
 
         <button class="btn btn-primary btn-block" type="submit" id="submitBtn">Se connecter</button>
+
+        <label class="check-row" for="remember">
+          <input type="checkbox" id="remember" name="remember" checked>
+          <span>Rester connecté sur cet appareil</span>
+        </label>
       </form>
 
       <div class="alert alert-warn" id="verifyBox" hidden style="margin-top:18px">
@@ -182,7 +187,7 @@ form.addEventListener("submit", async (event) => {
   submitBtn.innerHTML = '<span class="spinner"></span> Connexion…';
 
   try {
-    const payload = { email, password };
+    const payload = { email, password, remember: document.getElementById("remember").checked };
     if (totpMode && totpInput.value.trim()) payload.totp = totpInput.value.trim();
 
     const data = await api("/api/auth/login", { method: "POST", body: payload });
